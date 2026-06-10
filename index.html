@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Smart City Energy</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <section class="hero-section">
+      <div class="hero-content">
+        <div class="contest-badge">Genius Olympiad Ukraine 2026</div>
+        <h1 class="hero-title">Smart City Energy</h1>
+        <p class="hero-subtitle">
+          Модель енергоефективного розвитку міської інфраструктури
+        </p>
+        <button class="hero-btn" onclick="scrollToDashboard()">Start</button>
+      </div>
+      <div class="hero-overlay"></div>
+    </section>
+
+    <div class="dashboard-wrapper" id="dashboard">
+      <div class="setup-column">
+        <div class="card">
+          <h2 style="text-align: center">Налаштування карти</h2>
+          <table id="mapDesignTable">
+            <thead>
+              <tr>
+                <th>Показувати</th>
+                <th>Категорія</th>
+                <th>Колір</th>
+                <th>Кількість</th>
+                <th>Споживання (кВт·год/міс)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-category="apartment">
+                <td><input type="checkbox" class="mapShowCheck" checked /></td>
+                <td>🏢 Квартири</td>
+                <td><input type="color" class="mapColor" value="#ff0000" /></td>
+                <td><input type="number" class="mapCount" value="40000" /></td>
+                <td>
+                  <input type="number" class="mapConsumption" value="250" />
+                </td>
+              </tr>
+              <tr data-category="house">
+                <td><input type="checkbox" class="mapShowCheck" checked /></td>
+                <td>🏠Приватні будинки</td>
+                <td><input type="color" class="mapColor" value="#00ff00" /></td>
+                <td><input type="number" class="mapCount" value="5000" /></td>
+                <td>
+                  <input type="number" class="mapConsumption" value="400" />
+                </td>
+              </tr>
+              <tr data-category="public">
+                <td><input type="checkbox" class="mapShowCheck" checked /></td>
+                <td>🏫Громадські будівлі</td>
+                <td><input type="color" class="mapColor" value="#0000ff" /></td>
+                <td><input type="number" class="mapCount" value="300" /></td>
+                <td>
+                  <input type="number" class="mapConsumption" value="3000" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top: 10px">
+            <span>Масштаб:</span>
+            <select id="mapScaleSelect"></select>
+            <button onclick="applyMapDesign()">Застосувати дизайн</button>
+          </div>
+        </div>
+
+        <div class="map-container card">
+          <div class="map" id="map"></div>
+        </div>
+
+        <div class="card">
+          <h2>Доступні заходи</h2>
+          <table id="measureConfigTable">
+            <thead>
+              <tr>
+                <th>Назва</th>
+                <th>Вартість</th>
+                <th>Ефект</th>
+                <th>Дія</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="add-measure-inline">
+            <input id="newMeasureName" placeholder="Назва" />
+            <input id="newMeasureCost" placeholder="Вартість" />
+            <input id="newMeasureEffect" placeholder="Ефект" />
+            <button onclick="addMeasure()">Додати</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>План заходів на 10 років</h2>
+          <div class="mode-selector">
+            <input
+              type="radio"
+              name="calcMode"
+              value="yearly"
+              checked
+              onclick="realtimePreview()"
+            />
+            Щорічний
+            <input
+              type="radio"
+              name="calcMode"
+              value="cumulative"
+              onclick="realtimePreview()"
+            />
+            Накопичувальний
+          </div>
+          <div id="planContainer"></div>
+          <button
+            onclick="clearAllPlans()"
+            style="margin-top: 15px; background: #6c757d"
+          >
+            Очистити план
+          </button>
+        </div>
+      </div>
+
+      <div class="results-column">
+        <div class="sticky-results">
+          <h2>Результати симуляції</h2>
+
+          <div id="strategyDescription" class="card description-card">
+            <h3 id="descTitle">Аналіз стратегії</h3>
+            <p id="descText"></p>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-box card">
+              <canvas id="yearChart"></canvas>
+            </div>
+            <div class="chart-box card">
+              <canvas id="budgetChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card table-card">
+            <table id="resultTable">
+              <thead>
+                <tr>
+                  <th>Рік</th>
+                  <th>Бюджет</th>
+                  <th>Витрати</th>
+                  <th>Економія %</th>
+                  <th>Споживання</th>
+                  <th>Заощаджено</th>
+                  <th>Залишок</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot id="resultTableFoot"></tfoot>
+            </table>
+          </div>
+
+          <div class="card actions-card">
+            <button id="optimizeBtn" class="btn-success">
+              Найкраща стратегія
+            </button>
+            <div class="benchmark-zone">
+              <h4>Експрес-інвестиція:</h4>
+              <div id="benchmarkButtons"></div>
+              <button onclick="investEqually()" class="btn-warning">
+                Рівномірний розподіл
+              </button>
+            </div>
+
+            <div class="save-zone">
+              <h4>Збереження стратегії</h4>
+              <input type="text" id="strategyName" placeholder="Назва..." />
+              <button onclick="saveCurrentStrategy()">Зберегти</button>
+              <div id="savedStrategiesList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <template id="yearBlockTemplate">
+      <div class="yearBlock card">
+        <div class="year-header">
+          <h3>Рік <span class="yearNumber"></span></h3>
+        </div>
+
+        <div class="city-growth-panel">
+          <span class="growth-label">Нове будівництво:</span>
+          <div class="growth-inputs">
+            <label title="Квартири"
+              >🏢 <input type="number" class="growth-apartment" value="0"
+            /></label>
+            <label title="Приватні будинки"
+              >🏠 <input type="number" class="growth-house" value="0"
+            /></label>
+            <label title="Громадські будівлі"
+              >🏫 <input type="number" class="growth-public" value="0"
+            /></label>
+          </div>
+        </div>
+
+        <div class="measuresList"></div>
+
+        <button class="addMeasureBtn">➕ Додати захід</button>
+      </div>
+    </template>
+
+    <template id="measureRowTemplate">
+      <div class="measureRow">
+        <div class="measure-main-info">
+          <select class="measureSelect">
+            <option value="led">LED освітлення</option>
+            <option value="insulation">Утеплення фасадів</option>
+            <option value="solar">Сонячні панелі</option>
+            <option value="smart">Smart-лічильники</option>
+            <option value="home">Розумний дім</option>
+          </select>
+          <div class="count-wrapper">
+            <input type="number" class="measureCount" placeholder="Кількість" />
+            <span class="unit-label">од.</span>
+          </div>
+        </div>
+
+        <div class="measure-categories">
+          <span class="cat-title">Застосувати до:</span>
+          <div class="cat-checks-group">
+            <label
+              ><input
+                type="checkbox"
+                class="categoryCheck"
+                value="apartment"
+                checked
+              />
+              Квартири</label
+            >
+            <label
+              ><input
+                type="checkbox"
+                class="categoryCheck"
+                value="house"
+                checked
+              />
+              Будинки</label
+            >
+            <label
+              ><input
+                type="checkbox"
+                class="categoryCheck"
+                value="public"
+                checked
+              />
+              Громадські</label
+            >
+          </div>
+        </div>
+
+        <button
+          class="remove-measure"
+          onclick="
+            this.parentElement.remove();
+            realtimePreview();
+          "
+          title="Видалити"
+        >
+          ✕
+        </button>
+      </div>
+    </template>
+
+    <script src="script1.js"></script>
+  </body>
+</html>
